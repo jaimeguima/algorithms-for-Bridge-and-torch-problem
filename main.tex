@@ -1,0 +1,383 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+
+\title{FundIA TP1}
+\author{Luigi Jacob}
+\date{September 2026}
+
+\begin{document}
+
+\maketitle
+
+\section{Tarefa 1 -- Modelagem do Problema}
+
+O problema da Ponte e da Tocha pode ser modelado como um problema de busca em um grafo de estados. Seja o grafo ponderado
+
+\[
+G = (V,E),
+\]
+
+em que $V$ representa o conjunto de estados possíveis do problema e $E$ representa o conjunto de transições válidas entre esses estados. Cada aresta possui um custo associado, correspondente ao tempo necessário para realizar a travessia que produz a transição.
+
+Dessa forma, a solução do problema consiste em encontrar um caminho no grafo que conecte o estado inicial ao estado objetivo. Como as travessias possuem tempos diferentes, os custos associados às arestas também podem ser diferentes.
+
+\subsection{Representação de Estado}
+
+Cada estado deve armazenar a posição das quatro pessoas e da tocha. Para isso, um estado $S$ é representado pela tupla
+
+\[
+S = (A,B,C,D,T),
+\]
+
+em que $A$, $B$, $C$ e $D$ representam as quatro pessoas e $T$ representa a posição da tocha.
+
+Cada elemento da tupla assume um valor binário:
+
+\begin{itemize}
+    \item $0$: margem inicial;
+    \item $1$: margem final.
+\end{itemize}
+
+Portanto, o conjunto de estados possíveis pode ser definido como
+
+\[
+V \subseteq \{0,1\}^{5}.
+\]
+
+Por exemplo, o estado
+
+\[
+S = (1,1,0,0,1)
+\]
+
+indica que as pessoas $A$ e $B$, juntamente com a tocha, encontram-se na margem final da ponte, enquanto $C$ e $D$ permanecem na margem inicial.
+
+É importante observar que os valores binários representam a \textbf{posição atual} de cada elemento, e não simplesmente se uma pessoa já realizou uma travessia. Isso é necessário porque, durante a solução do problema, pessoas podem atravessar a ponte em ambos os sentidos.
+
+\subsection{Estado Inicial e Estado Objetivo}
+
+No início do problema, todas as pessoas e a tocha encontram-se na margem inicial. Assim, o estado inicial é
+
+\[
+S_0 = (0,0,0,0,0).
+\]
+
+O objetivo consiste em levar todas as quatro pessoas para a margem final. Como toda travessia necessita da tocha, ao término da solução ela também estará nessa margem. Portanto, o estado objetivo é
+
+\[
+S_G = (1,1,1,1,1).
+\]
+
+No grafo de estados, $S_0$ corresponde ao vértice de origem da busca e $S_G$ ao vértice objetivo.
+
+\subsection{Função Sucessora}
+
+A função sucessora determina, para um determinado estado $S$, quais estados podem ser alcançados por meio de uma única travessia válida.
+
+Seja
+
+\[
+S=(A,B,C,D,T).
+\]
+
+Primeiramente, identifica-se o conjunto $P_T$ formado pelas pessoas que estão na mesma margem que a tocha:
+
+\[
+P_T = \{p \in \{A,B,C,D\} \mid p = T\}.
+\]
+
+Uma ação válida consiste em selecionar uma ou duas pessoas pertencentes a $P_T$. Assim, para um conjunto de pessoas $M$ selecionado para realizar a travessia, deve-se satisfazer
+
+\[
+M \subseteq P_T
+\]
+
+e
+
+\[
+1 \leq |M| \leq 2.
+\]
+
+A função sucessora gera todas as combinações válidas de uma ou duas pessoas que estejam na mesma margem que a tocha. Cada uma dessas combinações produz um novo estado e, consequentemente, uma aresta no grafo.
+
+Formalmente, pode-se representar a função sucessora como
+
+\[
+Succ (S) =
+\{(M,S',c(M)) \mid
+M \subseteq P_T,\;
+1 \leq |M| \leq 2
+\},
+\]
+
+em que $M$ representa a ação realizada, $S'$ representa o estado resultante e $c(M)$ representa o custo da travessia.
+
+\subsection{Ações e Transições}
+
+Uma ação consiste no deslocamento de uma ou duas pessoas da margem em que se encontra a tocha para a margem oposta.
+
+Quando uma pessoa participa da travessia, sua posição é invertida. Se $x_p$ representa a posição da pessoa $p$, então
+
+\[
+x'_p = 1-x_p,
+\qquad \forall p \in M.
+\]
+
+As pessoas que não participam da travessia permanecem na mesma margem:
+
+\[
+x'_p=x_p,
+\qquad \forall p \notin M.
+\]
+
+Como toda travessia exige a presença da tocha, sua posição também é invertida:
+
+\[
+T'=1-T.
+\]
+
+Dessa forma, cada ação válida define uma transição entre dois vértices do grafo.
+
+Por exemplo, considerando o estado inicial
+
+\[
+(0,0,0,0,0),
+\]
+
+caso as pessoas $A$ e $B$ atravessem juntas, ocorre a transição
+
+\[
+(0,0,0,0,0)
+\xrightarrow{\{A,B\}}
+(1,1,0,0,1).
+\]
+
+O novo estado constitui outro vértice do grafo e a travessia realizada corresponde à aresta que conecta os dois estados.
+
+\subsection{Custos das Transições}
+
+Cada pessoa possui um tempo específico de travessia:
+
+\[
+t(A)=1,\qquad
+t(B)=2,\qquad
+t(C)=5,\qquad
+t(D)=10.
+\]
+
+Quando apenas uma pessoa atravessa, o custo da transição corresponde ao seu próprio tempo:
+
+\[
+c(\{p\})=t(p).
+\]
+
+Quando duas pessoas atravessam juntas, ambas precisam se deslocar na velocidade da pessoa mais lenta. Portanto, o custo da transição é dado por
+
+\[
+c(M)=\max_{p\in M} t(p).
+\]
+
+Por exemplo,
+
+\[
+c(\{A,B\})=\max(1,2)=2,
+\]
+
+enquanto
+
+\[
+c(\{A,D\})=\max(1,10)=10.
+\]
+
+Assim, cada transição do grafo pode ser representada por uma aresta ponderada
+
+\[
+S \xrightarrow[M]{c(M)} S',
+\]
+
+na qual $S$ é o estado de origem, $S'$ é o estado resultante, $M$ é a ação realizada e $c(M)$ é o peso da aresta.
+
+Consequentemente, uma solução para o problema corresponde a um caminho
+
+\[
+S_0 \rightarrow S_1 \rightarrow \cdots \rightarrow S_G
+\]
+
+no grafo de estados. O custo total desse caminho é a soma dos custos das travessias realizadas:
+
+\[
+C = \sum_{i=0}^{k-1} c(S_i,S_{i+1}).
+\]
+
+O objetivo final consiste, portanto, em encontrar um caminho entre $S_0$ e $S_G$, sendo que, para os métodos de busca orientados por custo, busca-se especificamente o caminho cujo custo total seja mínimo.
+```
+
+\section{Algoritmos de Busca}
+
+Para solucionar o problema da Ponte e da Tocha, foram
+considerados quatro algoritmos de busca: Busca em
+Profundidade (DFS), Busca em Largura (BFS), Busca de
+Custo Uniforme (UCS) e Busca A*.
+
+Os algoritmos utilizam o mesmo grafo de estados,
+diferenciando-se pelo critério adotado para selecionar
+o próximo nó a ser explorado.
+
+\subsection{Busca em Profundidade (DFS)}
+
+A Busca em Profundidade, ou Depth-First Search (DFS),
+é um algoritmo de busca não informada que explora
+um ramo do grafo até encontrar o estado objetivo
+ou até não ser possível avançar para novos nós.
+
+Quando não existem sucessores ainda não explorados,
+o algoritmo retrocede para investigar outros caminhos,
+realizando o processo conhecido como backtracking.
+
+O DFS utiliza uma estrutura de pilha LIFO
+(Last In, First Out), na qual o último elemento
+inserido é o primeiro a ser removido.
+
+Como não considera os custos das transições para
+determinar a ordem de exploração, o DFS não garante
+encontrar a solução de menor custo.
+
+Além disso, em grafos que possuem ciclos, é necessário
+controlar os estados visitados para evitar que o
+algoritmo explore repetidamente os mesmos caminhos.
+
+\subsection{Busca em Largura (BFS)}
+
+A Busca em Largura, ou Breadth-First Search (BFS),
+é um algoritmo de busca não informada que explora
+os nós do grafo em ordem crescente de profundidade.
+
+Diferentemente do DFS, o BFS explora todos os nós
+de um determinado nível antes de avançar para
+o nível seguinte.
+
+Para isso, utiliza uma estrutura de fila FIFO
+(First In, First Out), na qual o primeiro elemento
+inserido é o primeiro a ser removido.
+
+Em um grafo finito, com controle adequado dos
+estados visitados, o BFS encontra uma solução,
+caso exista um caminho entre o estado inicial
+e o estado objetivo.
+
+O BFS garante encontrar uma solução com o menor
+número de transições. Entretanto, como os custos
+das travessias podem ser diferentes, essa solução
+não necessariamente apresenta o menor tempo total.
+
+\subsection{Busca de Custo Uniforme (UCS)}
+
+A Busca de Custo Uniforme, ou Uniform-Cost Search
+(UCS), é um algoritmo de busca não informada que
+considera os custos das transições para determinar
+a ordem de exploração dos nós.
+
+Diferentemente do BFS, que prioriza os nós de menor
+profundidade, o UCS seleciona o nó com o menor
+custo acumulado desde o estado inicial.
+
+Esse custo é representado pela função
+
+\[
+g(n)=\sum_{i=0}^{k-1}c(S_i,S_{i+1}),
+\]
+
+em que $g(n)$ corresponde ao custo acumulado
+para alcançar o nó $n$ e $c(S_i,S_{i+1})$
+representa o custo da transição entre dois
+estados consecutivos.
+
+O algoritmo utiliza uma fila de prioridade,
+na qual os nós são ordenados pelo valor
+de $g(n)$.
+
+Como os custos das travessias são positivos,
+o UCS garante encontrar uma solução de custo
+mínimo quando implementado corretamente.
+
+No problema da Ponte e da Tocha, isso significa
+encontrar uma sequência de travessias que minimize
+o tempo total necessário para transportar todas
+as pessoas até a margem final.
+
+\subsection{Busca A*}
+
+A Busca A* é um algoritmo de busca informada que
+combina o custo acumulado desde o estado inicial
+com uma estimativa do custo restante para alcançar
+o estado objetivo.
+
+A seleção dos nós é realizada por meio da função
+
+\[
+f(n)=g(n)+h(n),
+\]
+
+em que $g(n)$ representa o custo acumulado para
+alcançar o nó atual e $h(n)$ representa uma
+estimativa do custo necessário para atingir
+o estado objetivo.
+
+O algoritmo utiliza uma fila de prioridade
+para selecionar o nó com menor valor de $f(n)$.
+
+Dessa forma, o A* considera tanto o custo
+do caminho já percorrido quanto uma estimativa
+do custo restante, buscando orientar a exploração
+para caminhos com menor custo total estimado.
+
+A função heurística $h(n)$ deve ser admissível,
+ou seja, não pode superestimar o custo mínimo
+real necessário para alcançar o objetivo.
+
+Para solucionar o problema da Ponte e da Tocha, 
+propõe-se uma função heurística baseada nos tempos de 
+travessia dos indivíduos e na posição atual da tocha. 
+Seja $O$ o conjunto de pessoas na margem de origem e $D$ 
+o conjunto de pessoas na margem de destino. A função heurística 
+$h(n)$ é definida da seguinte forma:
+
+\begin{itemize}
+    \item Se a tocha estiver na \textbf{margem de origem}:
+    \[
+    h(n) = \max_{p \in O} t(p)
+    \]
+    \item Se a tocha estiver na \textbf{margem de destino} (e $O \neq \emptyset$):
+    \[
+    h(n) = \max_{p \in O} t(p) + \min_{p \in D} t(p)
+    \]
+\end{itemize}
+Caso o estado seja o objetivo ($O = \emptyset$), $h(n) = 0$.
+
+Essa heurística é \textbf{admissível}. No primeiro caso, 
+para que o objetivo seja alcançado, todas as pessoas no 
+conjunto $O$ precisam obrigatoriamente atravessar a ponte. 
+Como a ponte suporta no máximo duas pessoas e a travessia 
+ocorre na velocidade da pessoa mais lenta, o custo mínimo 
+para esvaziar a origem será sempre igual ou superior ao 
+tempo da pessoa mais lenta que lá está. 
+
+No segundo caso, se a tocha encontra-se no destino e ainda 
+existem pessoas na origem, tem-se a garantia de que pelo 
+menos uma viagem de retorno precisará ocorrer. O retorno mais 
+rápido possível à margem de origem é realizado pela pessoa 
+mais rápida presente no destino ($\min_{p \in D} t(p)$). 
+Somando-se essa viagem otimista com o limite inferior de 
+travessia dos indivíduos restantes na origem ($\max_{p \in O} t(p)$), 
+obtém-se um valor que nunca superestima o custo real restante.
+
+Com uma heurística admissível, custos positivos
+e tratamento adequado de caminhos alternativos,
+o A* garante encontrar uma solução de custo mínimo.
+
+Quando a função heurística assume valor zero
+para todos os estados, o A* utiliza apenas o
+custo acumulado e passa a apresentar o mesmo
+critério de expansão da Busca de Custo Uniforme.
+
+\end{document}

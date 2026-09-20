@@ -1,8 +1,15 @@
 \documentclass{article}
 \usepackage{graphicx} % Required for inserting images
+\usepackage{float}
+\usepackage{amsmath}
 
-\title{FundIA TP1}
-\author{Luigi Jacob}
+\title{TP1 - Fundamentos de IA}
+\author{
+    Gilberto Pereira \\
+    Jaime Guimaraes \\
+    Luigi Jacob \\
+    Yaggo Teixeira 
+}
 \date{September 2026}
 
 \begin{document}
@@ -396,7 +403,8 @@ uma solução.
 Para o tempo de processamento, cada algoritmo foi executado $1\,000$
 vezes e registraram-se a média e o desvio padrão das medições, feitas
 com a função \texttt{time.perf\_counter()} da biblioteca padrão do
-Python. Os resultados obtidos estão resumidos na tabela a seguir:
+Python. Os resultados obtidos estão resumidos na Tabela 1
+e ilustrados nas Figuras \ref{fig:grafico_custo} e \ref{fig:grafico_nos}
 
 \begin{table}[h]
 \centering
@@ -412,6 +420,20 @@ A*  & \textbf{17} & \textbf{17} & $25{,}82 \pm 3{,}61$ \\
 \end{tabular}
 \caption{Comparação dos quatro métodos de busca (média de $1\,000$ execuções).}
 \end{table}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{grafico_custo.png}
+    \caption{Comparação do custo total da solução (tempo em minutos) para cada algoritmo.}
+    \label{fig:grafico_custo}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{grafico_nos.png}
+    \caption{Comparação da quantidade de nós explorados por cada algoritmo.}
+    \label{fig:grafico_nos}
+\end{figure}
 
 \subsection{Análise dos Resultados}
 
@@ -488,5 +510,16 @@ vantagem decisiva à medida que o espaço de estados cresce. O limite fixo de n�
 atuou como salvaguarda para impedir buscas excessivamente longas,
 especialmente no DFS, que em grafos maiores ou com ciclos poderia
 se perder em ramos muito profundos sem encontrar solução.
+
+\renewcommand{\refname}{Referências Bibliográficas}
+\begin{thebibliography}{9}
+
+\bibitem{roteiro}
+CASTRO, C.; CAMPOS, J. P. \textbf{Trabalho Prático I: Fundamentos de Inteligência Artificial}. Departamento de Engenharia Elétrica, Universidade Federal de Minas Gerais (UFMG), 2026.
+
+\bibitem{slides_grafos}
+CAMPOS, J. P.; CASTRO, C. L. de. \textbf{Fundamentos de Inteligência Artificial: Cap. 3: Grafos e Busca}. Departamento de Engenharia Elétrica, Universidade Federal de Minas Gerais (UFMG), Belo Horizonte, 2026.
+
+\end{thebibliography}
 
 \end{document}

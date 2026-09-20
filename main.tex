@@ -380,4 +380,113 @@ para todos os estados, o A* utiliza apenas o
 custo acumulado e passa a apresentar o mesmo
 critério de expansão da Busca de Custo Uniforme.
 
+\section{Tarefa 4 -- Comparação dos Métodos de Busca}
+
+Para comparar os quatro métodos implementados (DFS, BFS, UCS e A*),
+o programa foi executado sobre o mesmo grafo de estados e as seguintes
+métricas foram registradas: o custo da solução encontrada (tempo total
+de travessia), o número de nós expandidos durante a busca e o tempo de
+processamento até a obtenção da solução. Além disso, todas as buscas
+possuem um limite fixo de nós expandidos (no nosso caso, $10\,000$ nós),
+após o qual o programa é encerrado. Isso evita buscas excessivamente
+longas ou mesmo laços infinitos, o que é especialmente importante no
+DFS, que pode mergulhar em ramos muito profundos antes de encontrar
+uma solução.
+
+Para o tempo de processamento, cada algoritmo foi executado $1\,000$
+vezes e registraram-se a média e o desvio padrão das medições, feitas
+com a função \texttt{time.perf\_counter()} da biblioteca padrão do
+Python. Os resultados obtidos estão resumidos na tabela a seguir:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|c|}
+\hline
+\textbf{Algoritmo} & \textbf{Custo (min)} & \textbf{Nós expandidos} & \textbf{Tempo médio ($\mu$s)} \\
+\hline
+DFS & 90 & 13 & $9{,}13 \pm 0{,}85$ \\
+BFS & 19 & 26 & $13{,}19 \pm 0{,}59$ \\
+UCS & \textbf{17} & 26 & $18{,}53 \pm 2{,}63$ \\
+A*  & \textbf{17} & \textbf{17} & $25{,}82 \pm 3{,}61$ \\
+\hline
+\end{tabular}
+\caption{Comparação dos quatro métodos de busca (média de $1\,000$ execuções).}
+\end{table}
+
+\subsection{Análise dos Resultados}
+
+\textbf{Custo da solução.} O DFS encontrou a pior solução (90 minutos):
+por não considerar nem a profundidade nem o custo das arestas, ele
+seguiu o primeiro ramo explorado em profundidade e retornou a primeira
+solução encontrada, que continha 10 travessias, muitas delas de alto
+custo. O BFS encontrou uma solução de 19 minutos, com o menor número
+de transições (5 travessias), mas ainda subótima em tempo. O UCS e o
+A* encontraram a solução ótima de 17 minutos.
+
+\textbf{Nós expandidos.} O DFS expandiu apenas 13 nós, mas essa
+eficiência é acidental: ele teve a ``sorte'' de tropeçar em uma solução
+cedo, sem qualquer garantia sobre sua qualidade. BFS e UCS expandiram
+26 nós cada, explorando o espaço de estados de forma sistemática. O A*
+expandiu apenas 17 nós, cerca de $35\%$ a menos que o UCS, pois a
+heurística admissível orientou a busca em direção ao objetivo, podando
+caminhos que, embora parcialmente baratos, não levariam à solução ótima.
+
+\textbf{Tempo de processamento.} Como o grafo do problema possui
+apenas 32 estados, o tempo de processamento é da ordem de microssegundos
+para todos os algoritmos. Curiosamente, o A* apresentou o maior tempo
+médio ($25{,}82\,\mu s$), apesar de expandir menos nós. Isso ocorre
+porque, neste problema pequeno, o custo das operações da fila de
+prioridade (heap) e do cálculo da função heurística a cada expansão
+supera o ganho obtido pela redução do número de nós explorados. De
+forma análoga, o DFS, que usa apenas uma pilha simples, foi o mais
+rápido ($9{,}13\,\mu s$), ainda que tenha retornado a pior solução.
+Em problemas com espaços de estados maiores, espera-se que o número
+de nós expandidos seja o fator dominante do tempo total, e a redução
+obtida pelo A* (de 26 para 17 nós, cerca de $35\%$ a menos que o UCS)
+tende a compensar esse custo adicional por nó.
+
+\subsection{Por que o BFS não garante a solução ótima?}
+
+O BFS garante encontrar a solução com o \textbf{menor número de
+transições} (arestas), pois explora os nós em ordem crescente de
+profundidade. Entretanto, essa garantia só coincide com a solução de
+menor custo quando todas as arestas têm o mesmo custo. No problema da
+Ponte e da Tocha, as travessias têm custos diferentes
+($t(A)=1$, $t(B)=2$, $t(C)=5$, $t(D)=10$), de modo que um caminho com
+menos passos pode ser mais caro que um caminho com mais passos. De
+fato, o BFS retornou uma solução de 19 minutos com 5 travessias,
+enquanto a solução ótima (17 minutos) também utiliza 5 travessias, mas
+com escolhas de pares que minimizam o tempo total -- o BFS, cego aos
+custos, não tem como fazer essa distinção: ele retorna o primeiro
+estado objetivo que atinge na profundidade mínima, qualquer que seja
+seu custo acumulado.
+
+Já o UCS expande sempre o nó de menor custo acumulado $g(n)$. Como
+todos os custos das travessias são positivos, quando o estado objetivo
+é removido da fila de prioridade pela primeira vez, não existe nenhum
+caminho ainda não explorado capaz de alcançá-lo com custo menor -- o
+que garante a otimalidade. O A* mantém essa garantia ao expandir o nó
+de menor $f(n)=g(n)+h(n)$, desde que a heurística $h(n)$ seja
+admissível (nunca superestime o custo real restante), o que é o caso
+da heurística utilizada, conforme demonstrado na seção anterior. A
+vantagem do A* sobre o UCS é que a heurística direciona a expansão,
+reduzindo o número de nós explorados (17 contra 26) sem abrir mão da
+solução ótima.
+
+\subsection{Conclusão}
+
+Os resultados confirmam a teoria: DFS e BFS são métodos não informados
+que não garantem a solução de menor custo em grafos com arestas de
+custos distintos, enquanto UCS e A* garantem a otimalidade. O A*
+destaca-se como o melhor método para este problema, pois encontra a
+solução ótima (17 minutos) expandindo o menor número de nós, graças
+à heurística admissível utilizada. Embora seu tempo médio de
+processamento tenha sido ligeiramente superior ao do UCS neste grafo
+pequeno -- devido ao custo da fila de prioridade e do cálculo da
+heurística --, a economia de nós expandidos tende a se tornar a
+vantagem decisiva à medida que o espaço de estados cresce. O limite fixo de nós expandidos
+atuou como salvaguarda para impedir buscas excessivamente longas,
+especialmente no DFS, que em grafos maiores ou com ciclos poderia
+se perder em ramos muito profundos sem encontrar solução.
+
 \end{document}
